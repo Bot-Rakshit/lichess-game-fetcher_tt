@@ -1,0 +1,62 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Tour {
+  id        String   @id
+  name      String
+  slug      String
+  info      Json?
+  createdAt DateTime
+  url       String
+  tier      Int
+  dates     Json
+  image     String?
+  rounds    Round[]
+}
+
+model Round {
+  id        String   @id
+  name      String
+  slug      String
+  createdAt DateTime
+  startsAt  DateTime
+  finishedAt DateTime?
+  finished  Boolean  @default(false)
+  url       String?
+  tourId    String
+  tour      Tour     @relation(fields: [tourId], references: [id])
+  games     Game[]
+}
+
+model Game {
+  id          String   @id @default(cuid())
+  event       String?
+  site        String?
+  date        String?
+  round       String?
+  white       String
+  black       String
+  result      String
+  whiteTeam   String?
+  blackTeam   String?
+  whiteFideId String?
+  blackFideId String?
+  whiteTitle  String?
+  blackTitle  String?
+  whiteElo    Int?
+  blackElo    Int?
+  variant     String?
+  eco         String?
+  opening     String?
+  pgn         String
+  roundId     String
+  roundRef    Round    @relation(fields: [roundId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+} 
