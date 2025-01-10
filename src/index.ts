@@ -8,9 +8,10 @@ const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Fetch and store top broadcasts
-app.get('/api/fetch-broadcasts', async (req: Request, res: Response) => {
+// Function to fetch and store broadcasts
+async function fetchAndStoreBroadcasts() {
   try {
+    console.log('Fetching broadcasts...');
     const response = await axios.get('https://lichess.org/api/broadcast/top');
     const broadcasts = response.data.active;
 
@@ -104,6 +105,7 @@ app.get('/api/fetch-broadcasts', async (req: Request, res: Response) => {
 
           // Only fetch and store PGNs if round is finished and we haven't stored its games yet
           if (round.finished && (!existingRound || existingRound.games.length === 0)) {
+            console.log(`Fetching PGNs for round ${round.id}`);
             // Fetch PGNs for the round
             const pgnResponse = await axios.get(`https://lichess.org/api/broadcast/round/${round.id}.pgn`);
             const pgns = pgnResponse.data.split('\n\n[Event').filter(Boolean);
@@ -124,6 +126,7 @@ app.get('/api/fetch-broadcasts', async (req: Request, res: Response) => {
               });
 
               if (!existingGame) {
+                console.log(`Storing new game: ${headers.White} vs ${headers.Black}`);
                 await prisma.game.create({
                   data: {
                     event: headers.Event,
@@ -155,12 +158,11 @@ app.get('/api/fetch-broadcasts', async (req: Request, res: Response) => {
       }
     }
 
-    res.json({ success: true });
+    console.log('Finished fetching and storing broadcasts');
   } catch (error) {
     console.error('Error fetching broadcasts:', error);
-    res.status(500).json({ error: 'Failed to fetch broadcasts' });
   }
-});
+}
 
 // Delete specific game by ID
 app.delete('/api/games/:id', async (req: Request, res: Response) => {
@@ -198,6 +200,13 @@ function parsePgnHeaders(pgn: string): Record<string, string> {
 
   return headers;
 }
+
+// Start fetching games immediately when server starts
+fetchAndStoreBroadcasts();
+
+// Set up periodic fetching (every 5 minutes)
+const FETCH_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+setInterval(fetchAndStoreBroadcasts, FETCH_INTERVAL);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
