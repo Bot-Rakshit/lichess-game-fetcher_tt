@@ -4,7 +4,8 @@ A service that fetches and stores chess games from Lichess broadcasts in a Postg
 
 ## Features
 
-- Fetches active broadcasts from Lichess
+- Automatically fetches active broadcasts from Lichess on startup
+- Periodically checks for new broadcasts every 5 minutes
 - Stores tournament, round, and game data
 - Provides endpoints to delete specific games or all games in a round
 - Parses and stores PGN data with metadata
@@ -31,6 +32,8 @@ A service that fetches and stores chess games from Lichess broadcasts in a Postg
 
 ## Running the Service
 
+The service will automatically start fetching broadcasts as soon as it starts, and will continue to check for new broadcasts every 5 minutes.
+
 Development mode:
 ```bash
 npm run dev
@@ -44,14 +47,13 @@ npm start
 
 ## API Endpoints
 
-### GET /api/fetch-broadcasts
-Fetches active broadcasts from Lichess and stores them in the database.
-
 ### DELETE /api/games/:id
 Deletes a specific game by ID.
 
 ### DELETE /api/rounds/:roundId/games
 Deletes all games in a specific round.
+
+Note: The `/api/fetch-broadcasts` endpoint is still available but not required for normal operation, as the service automatically fetches broadcasts on startup and periodically.
 
 ## Database Schema
 
